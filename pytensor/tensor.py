@@ -11,20 +11,20 @@ class Tensor(object):
         self.autograd = autograd
         self.child = {}
         self._id = np.random.randint(0, 100000)
-         
+
         if creators is not None:
             for c in creators:
                 if self._id not in c.child:
                     c.child[self._id] = 1
                 else:
                     c.child[self._id] += 1
-    
+
     def check_child_grads(self):
         for _, cnt in self.child.items():
             if cnt != 0:
                 return False
         return True
-    
+
     def backward(self, grad=None, grad_origin=None):
         if self.autograd:
             if grad_origin is not None:
@@ -36,7 +36,7 @@ class Tensor(object):
                 self.grad += grad
             else:
                 self.grad = grad
-                
+
             if self.creators and (self.check_child_grads() or not grad_origin):
                 if self.op == 'add':
                     self.creators[0].backward(self.grad, self)
@@ -77,7 +77,7 @@ class Tensor(object):
                           creators=[self],
                           op='sum_' + str(dim))
         return Tensor(self.data.sum(dim))
-    
+
     def expand(self, dim, copies):
         trans_cmd = list(range(0, len(self.data.shape)))
         trans_cmd.insert(dim, len(self.data.shape))
@@ -101,7 +101,7 @@ class Tensor(object):
             return Tensor(self.data.dot(x.data), autograd=True,
                           creators=[self, x], op='mmul')
         return Tensor(self.data.dot(x.data))
-    
+
     def __add__(self, other):
         if self.autograd and other.autograd:
             return Tensor(self.data + other.data,

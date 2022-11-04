@@ -16,7 +16,6 @@ class TestTensor:
         assert all(self.a.grad.data == [1, 1, 1])
         assert all(self.b.grad.data == [1, 1, 1])
 
-
     def test_neg(self):
         x = -self.a
         assert all(x.data == [-1, -2, -3])
@@ -53,8 +52,8 @@ class TestTensor:
         x = Tensor([self.a.data, self.b.data])
         x0 = x.expand(0, 2)
         x1 = x.expand(1, 2)
-        assert (x0.data == [[[1,2,3], [4,5,6]], [[1,2,3], [4,5,6]]]).all()
-        assert (x1.data == [[[1,2,3], [1,2,3]], [[4,5,6], [4,5,6]]]).all()
+        assert (x0.data == [[[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]]]).all()
+        assert (x1.data == [[[1, 2, 3], [1, 2, 3]], [[4, 5, 6], [4, 5, 6]]]).all()
 
     def test_transpose(self):
         x = Tensor([self.a.data, self.b.data]).transpose()
@@ -69,4 +68,4 @@ class TestTensor:
     def test_first(self):
         nn = FirstNN()
         nn.train(output=False)
-        assert nn.test() == True
+        assert nn.test() is True
