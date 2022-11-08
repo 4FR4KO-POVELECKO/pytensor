@@ -70,13 +70,13 @@ class Tensor(object):
                     dim = int(self.op.split('_')[1])
                     self.creators[0].backward(self.grad.sum(dim))
 
+    def _execute(self, data, creators, op):
+        if all(i.autograd for i in creators):
+            return Tensor(data, autograd=True, creators=creators, op=op)
+        return Tensor(data)
+
     def sum(self, dim):
-        if self.autograd:
-            return Tensor(self.data.sum(dim),
-                          autograd=True,
-                          creators=[self],
-                          op='sum_' + str(dim))
-        return Tensor(self.data.sum(dim))
+        return self._execute(self.data.sum(dim), creators=[self], op='sum_' + str(dim))
 
     def expand(self, dim, copies):
         trans_cmd = list(range(0, len(self.data.shape)))
@@ -84,53 +84,25 @@ class Tensor(object):
         new_shape = list(self.data.shape) + [copies]
         new_data = self.data.repeat(copies).reshape(new_shape)
         new_data = new_data.transpose(trans_cmd)
-
-        if self.autograd:
-            return Tensor(new_data, autograd=True,
-                          creators=[self], op='expand_' + str(dim))
-        return Tensor(new_data)
+        return self._execute(new_data, creators=[self], op='expand_' + str(dim))
 
     def transpose(self):
-        if self.autograd:
-            return Tensor(self.data.transpose(), autograd=True,
-                          creators=[self], op='transpose')
-        return Tensor(self.data.transpose())
+        return self._execute(self.data.transpose(), creators=[self], op='transpose')
 
     def mmul(self, x):
-        if self.autograd:
-            return Tensor(self.data.dot(x.data), autograd=True,
-                          creators=[self, x], op='mmul')
-        return Tensor(self.data.dot(x.data))
+        return self._execute(self.data.dot(x.data), creators=[self, x], op='mmul')
 
     def __add__(self, other):
-        if self.autograd and other.autograd:
-            return Tensor(self.data + other.data,
-                          autograd=True,
-                          creators=[self, other],
-                          op='add')
-        return Tensor(self.data + other.data)
+        return self._execute(self.data + other.data, creators=[self, other], op='add')
 
     def __neg__(self):
-        if self.autograd:
-            return Tensor(self.data * -1, autograd=True,
-                          creators=[self], op='neg')
-        return Tensor(self.data * -1)
+        return self._execute(self.data * -1, creators=[self], op='neg')
 
     def __sub__(self, other):
-        if self.autograd and other.autograd:
-            return Tensor(self.data - other.data,
-                          autograd=True,
-                          creators=[self, other],
-                          op='sub')
-        return Tensor(self.data - other.data)
+        return self._execute(self.data - other.data, creators=[self, other], op='sub')
 
     def __mul__(self, other):
-        if self.autograd and other.autograd:
-            return Tensor(self.data * other.data,
-                          autograd=True,
-                          creators=[self, other],
-                          op='mul')
-        return Tensor(self.data * other.data)
+        return self._execute(self.data * other.data, creators=[self, other], op='mul')
 
     def __repr__(self):
         return str(self.data.__repr__())
