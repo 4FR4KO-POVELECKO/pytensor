@@ -10,6 +10,8 @@ class TestTensor:
     def test_add(self):
         x = self.a + self.b
         assert all(x.data == [5, 7, 9])
+        x = self.a.add(self.b)
+        assert all(x.data == [5, 7, 9])
 
         x.backward(Tensor([1, 1, 1]))
         assert all(x.grad.data == [1, 1, 1])
@@ -19,6 +21,8 @@ class TestTensor:
     def test_neg(self):
         x = -self.a
         assert all(x.data == [-1, -2, -3])
+        x = self.a.neg()
+        assert all(x.data == [-1, -2, -3])
 
         x.backward(Tensor([1, 1, 1]))
         assert all(x.grad.data == [1, 1, 1])
@@ -26,6 +30,8 @@ class TestTensor:
 
     def test_sub(self):
         x = self.b - self.a
+        assert all(x.data == [3, 3, 3])
+        x = self.b.sub(self.a)
         assert all(x.data == [3, 3, 3])
 
         x.backward(Tensor([1, 1, 1]))
@@ -35,6 +41,8 @@ class TestTensor:
 
     def test_mul(self):
         x = self.a * self.b
+        assert all(x.data == [4, 10, 18])
+        x = self.a.mul(self.b)
         assert all(x.data == [4, 10, 18])
 
         x.backward(Tensor([1, 1, 1]))

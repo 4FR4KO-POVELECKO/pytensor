@@ -75,6 +75,18 @@ class Tensor(object):
             return Tensor(data, autograd=True, creators=creators, op=op)
         return Tensor(data)
 
+    def add(self, other):
+        return self.__add__(other)
+
+    def neg(self):
+        return self.__neg__()
+
+    def sub(self, other):
+        return self.__sub__(other)
+
+    def mul(self, other):
+        return self.__mul__(other)
+
     def sum(self, dim):
         return self._execute(self.data.sum(dim), creators=[self], op='sum_' + str(dim))
 
