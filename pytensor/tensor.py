@@ -1,123 +1,79 @@
+import inspect
+import importlib
 import numpy as np
 
 
 class Tensor(object):
-    def __init__(self, data, autograd=False,
-                 creators=None, op=None):
+    def __init__(self, data: list, autograd: bool = False):
         self.data = np.array(data)
-        self.op = op
-        self.creators = creators
-        self.grad = None
         self.autograd = autograd
-        self.child = {}
-        self._id = np.random.randint(0, 100000)
+        self.grad: Tensor = None
+        self.op: Operation = None
 
-        if creators is not None:
-            for c in creators:
-                if self._id not in c.child:
-                    c.child[self._id] = 1
-                else:
-                    c.child[self._id] += 1
+    def backward(self, grad):
+        if not self.autograd:
+            return
+        self.grad = grad if not self.grad else self.grad + grad
 
-    def check_child_grads(self):
-        for _, cnt in self.child.items():
-            if cnt != 0:
-                return False
-        return True
+        if self.op and self.op.parents:
+            self.op.backward(grad)
 
-    def backward(self, grad=None, grad_origin=None):
-        if self.autograd:
-            if grad_origin is not None:
-                if self.child[grad_origin._id] == 0:
-                    raise Exception('Нельзя распространить больше одного раза.')
-                else:
-                    self.child[grad_origin._id] -= 1
-            if self.grad:
-                self.grad += grad
-            else:
-                self.grad = grad
-
-            if self.creators and (self.check_child_grads() or not grad_origin):
-                if self.op == 'add':
-                    self.creators[0].backward(self.grad, self)
-                    self.creators[1].backward(self.grad, self)
-                if self.op == 'neg':
-                    self.creators[0].backward(self.grad.__neg__())
-                if self.op == 'sub':
-                    new = Tensor(self.grad.data)
-                    self.creators[0].backward(new, self)
-                    new = Tensor(self.grad.__neg__().data)
-                    self.creators[1].backward(new, self)
-                if self.op == 'mul':
-                    new = self.grad * self.creators[1]
-                    self.creators[0].backward(new, self)
-                    new = self.grad * self.creators[0]
-                    self.creators[1].backward(new, self)
-                if self.op == 'mmul':
-                    act = self.creators[0]
-                    weights = self.creators[1]
-                    new = self.grad.mmul(weights.transpose())
-                    act.backward(new)
-                    new = self.grad.transpose().mmul(act).transpose()
-                    weights.backward(new)
-                if self.op == 'transpose':
-                    self.creators[0].backward(self.grad.transpose())
-                if 'sum' in self.op:
-                    dim = int(self.op.split('_')[1])
-                    ds = self.creators[0].data.shape[dim]
-                    self.creators[0].backward(self.grad.expand(dim, ds))
-                if 'expand' in self.op:
-                    dim = int(self.op.split('_')[1])
-                    self.creators[0].backward(self.grad.sum(dim))
-
-    def _execute(self, data, creators, op):
-        if all(i.autograd for i in creators):
-            return Tensor(data, autograd=True, creators=creators, op=op)
-        return Tensor(data)
-
-    def add(self, other):
-        return self.__add__(other)
-
-    def neg(self):
-        return self.__neg__()
-
-    def sub(self, other):
-        return self.__sub__(other)
-
-    def mul(self, other):
-        return self.__mul__(other)
+    def _execute(self, operation, *data):
+        tensors = [tensor for tensor in data if type(tensor) is Tensor]  # отбираем только тензоры
+        op = operation(*tensors)
+        return op.forward(*[d.data if type(d) is Tensor else d for d in data])
 
     def sum(self, dim):
-        return self._execute(self.data.sum(dim), creators=[self], op='sum_' + str(dim))
+        return self._execute(Tensor._sum, self, dim)
 
     def expand(self, dim, copies):
-        trans_cmd = list(range(0, len(self.data.shape)))
-        trans_cmd.insert(dim, len(self.data.shape))
-        new_shape = list(self.data.shape) + [copies]
-        new_data = self.data.repeat(copies).reshape(new_shape)
-        new_data = new_data.transpose(trans_cmd)
-        return self._execute(new_data, creators=[self], op='expand_' + str(dim))
+        return self._execute(Tensor._expand, self, dim, copies)
 
     def transpose(self):
-        return self._execute(self.data.transpose(), creators=[self], op='transpose')
+        return self._execute(Tensor._transpose, self)
 
-    def mmul(self, x):
-        return self._execute(self.data.dot(x.data), creators=[self, x], op='mmul')
+    def matmul(self, x):
+        return self._execute(Tensor._matmul, self, x)
 
-    def __add__(self, other):
-        return self._execute(self.data + other.data, creators=[self, other], op='add')
+    def add(self, x): return self.__add__(x)
+    def sub(self, x): return self.__sub__(x)
+    def mul(self, x): return self.__mul__(x)
+    def neg(self): return self.__neg__()
+
+    def __add__(self, x):
+        return self._execute(Tensor._add, self, x)
 
     def __neg__(self):
-        return self._execute(self.data * -1, creators=[self], op='neg')
+        return self._execute(Tensor._neg, self)
 
-    def __sub__(self, other):
-        return self._execute(self.data - other.data, creators=[self, other], op='sub')
+    def __sub__(self, x):
+        return self._execute(Tensor._sub, self, x)
 
-    def __mul__(self, other):
-        return self._execute(self.data * other.data, creators=[self, other], op='mul')
+    def __mul__(self, x):
+        return self._execute(Tensor._mul, self, x)
 
-    def __repr__(self):
-        return str(self.data.__repr__())
+    def __repr__(self): return str(self.data.__repr__())
+    def __str__(self): return str(self.data.__str__())
 
-    def __str__(self):
-        return str(self.data.__str__())
+
+class Operation(object):
+    def __init__(self, *tensors: Tensor):
+        self.parents = tensors
+        self.autograd = any([tensor.autograd for tensor in tensors])
+
+    def forward(self, *args):
+        raise NotImplementedError(f'Метод forward не применим для {type(self)}')
+
+    def backward(self, grad: Tensor):
+        raise NotImplementedError(f'Метод backward не применим для {type(self)}')
+
+    def new_tensor(self, data):
+        tensor = Tensor(data, autograd=self.autograd)
+        tensor.op = self
+        return tensor
+
+
+# Задаем операции
+# operation.Add -> Tensor._add ...
+for name, cls in inspect.getmembers(importlib.import_module('pytensor.operation'), inspect.isclass):
+    setattr(Tensor, '_' + name.lower(), cls)

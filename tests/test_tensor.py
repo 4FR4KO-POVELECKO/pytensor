@@ -67,8 +67,8 @@ class TestTensor:
         x = Tensor([self.a.data, self.b.data]).transpose()
         assert (x.data == [[1, 4], [2, 5], [3, 6]]).all()
 
-    def test_mmul(self):
-        x = self.a.mmul(self.b)
+    def test_matmul(self):
+        x = self.a.matmul(self.b)
         assert x.data == [32]
 
     # Test NN

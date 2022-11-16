@@ -15,7 +15,7 @@ class FirstNN:
 
     @property
     def prediction(self):
-        return self.x_train.mmul(self.w[0]).mmul(self.w[1])
+        return self.x_train.matmul(self.w[0]).matmul(self.w[1])
 
     @property
     def loss(self):
