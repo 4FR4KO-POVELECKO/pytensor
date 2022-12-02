@@ -75,5 +75,5 @@ class Operation(object):
 
 # Задаем операции
 # operation.Add -> Tensor._add ...
-for name, cls in inspect.getmembers(importlib.import_module('pytensor.operation'), inspect.isclass):
+for name, cls in inspect.getmembers(importlib.import_module('pytensor.operations'), inspect.isclass):
     setattr(Tensor, '_' + name.lower(), cls)
