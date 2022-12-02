@@ -1,5 +1,5 @@
 from pytensor.tensor import Tensor
-from example.first import FirstNN
+from pytensor import operations
 
 
 class TestTensor:
@@ -7,73 +7,43 @@ class TestTensor:
         self.a = Tensor([1, 2, 3], autograd=True)
         self.b = Tensor([4, 5, 6], autograd=True)
 
-    def test_add(self):
-        x = self.a + self.b
-        assert all(x.data == [5, 7, 9])
-        x = self.a.add(self.b)
-        assert all(x.data == [5, 7, 9])
+    def test_create(self):
+        x = Tensor([1, 1, 1])
+        assert all(x.data == [1, 1, 1])
+        assert x.autograd is False
 
-        x.backward(Tensor([1, 1, 1]))
-        assert all(x.grad.data == [1, 1, 1])
-        assert all(self.a.grad.data == [1, 1, 1])
-        assert all(self.b.grad.data == [1, 1, 1])
+    def test_grad(self):
+        a = Tensor([1, 2, 3], autograd=True)
+        b = Tensor([4, 5, 6], autograd=True)
+        c = Tensor([7, 8, 9], autograd=True)
 
-    def test_neg(self):
-        x = -self.a
-        assert all(x.data == [-1, -2, -3])
-        x = self.a.neg()
-        assert all(x.data == [-1, -2, -3])
+        d = a + (-b)
+        e = (-b) + c
+        f = d + e
 
-        x.backward(Tensor([1, 1, 1]))
-        assert all(x.grad.data == [1, 1, 1])
-        assert all(self.a.grad.data == [-1, -1, -1])
+        f.backward(Tensor([1, 1, 1]))
 
-    def test_sub(self):
-        x = self.b - self.a
-        assert all(x.data == [3, 3, 3])
-        x = self.b.sub(self.a)
-        assert all(x.data == [3, 3, 3])
+        assert all(a.grad.data == [1, 1, 1])
+        assert all(b.grad.data == [-2, -2, -2])
+        assert all(c.grad.data == [1, 1, 1])
+        assert all(d.grad.data == [1, 1, 1])
+        assert all(e.grad.data == [1, 1, 1])
+        assert all(f.grad.data == [1, 1, 1])
 
-        x.backward(Tensor([1, 1, 1]))
-        assert all(x.grad.data == [1, 1, 1])
-        assert all(self.a.grad.data == [-1, -1, -1])
-        assert all(self.b.grad.data == [1, 1, 1])
-
-    def test_mul(self):
-        x = self.a * self.b
-        assert all(x.data == [4, 10, 18])
-        x = self.a.mul(self.b)
-        assert all(x.data == [4, 10, 18])
-
-        x.backward(Tensor([1, 1, 1]))
-        assert all(x.grad.data == [1, 1, 1])
-        assert all(self.a.grad.data == [4, 5, 6])
-        assert all(self.b.grad.data == [1, 2, 3])
-
-    def test_sum(self):
-        x0 = Tensor([self.a.data, self.b.data], autograd=True).sum(0)
-        x1 = Tensor([self.a.data, self.b.data], autograd=True).sum(1)
-        assert all(x0.data == [5, 7, 9])
-        assert all(x1.data == [6, 15])
-
-    def test_expand(self):
-        x = Tensor([self.a.data, self.b.data])
-        x0 = x.expand(0, 2)
-        x1 = x.expand(1, 2)
-        assert (x0.data == [[[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]]]).all()
-        assert (x1.data == [[[1, 2, 3], [1, 2, 3]], [[4, 5, 6], [4, 5, 6]]]).all()
-
-    def test_transpose(self):
-        x = Tensor([self.a.data, self.b.data]).transpose()
-        assert (x.data == [[1, 4], [2, 5], [3, 6]]).all()
-
-    def test_matmul(self):
-        x = self.a.matmul(self.b)
-        assert x.data == [32]
-
-    # Test NN
-
-    def test_first(self):
-        nn = FirstNN()
-        nn.train(output=False)
-        assert nn.test() is True
+    def test_operation(self):
+        t = self.a + self.b
+        assert isinstance(t.op, operations.Add)
+        t = -self.a
+        assert isinstance(t.op, operations.Neg)
+        t = self.a - self.b
+        assert isinstance(t.op, operations.Sub)
+        t = self.a * self.b
+        assert isinstance(t.op, operations.Mul)
+        t = self.a.matmul(self.b)
+        assert isinstance(t.op, operations.MatMul)
+        t = self.a.transpose()
+        assert isinstance(t.op, operations.Transpose)
+        t = self.a.sum(0)
+        assert isinstance(t.op, operations.Sum)
+        t = self.a.expand(0, 2)
+        assert isinstance(t.op, operations.Expand)
