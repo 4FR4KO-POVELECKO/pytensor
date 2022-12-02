@@ -1,5 +1,5 @@
 from pytensor.tensor import Tensor
-from pytensor.optimizer import SGD
+from pytensor.optimizers import SGD
 import numpy as np
 np.random.seed(0)
 
