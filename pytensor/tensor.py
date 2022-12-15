@@ -10,6 +10,18 @@ class Tensor(object):
         self.grad: Tensor = None
         self.op: Operation = None
 
+    @property
+    def shape(self):
+        return self.data.shape
+
+    @classmethod
+    def zeros(cls, *shape, **kwargs):
+        return cls(np.zeros(shape), **kwargs)
+    
+    @staticmethod
+    def sqrt(x):
+        return np.sqrt(x)
+
     def backward(self, grad):
         if not self.autograd:
             return

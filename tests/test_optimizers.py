@@ -9,9 +9,21 @@ class TestOptimizer:
         self.x = self.a + self.b
         self.x.backward(Tensor([1, 1, 1]))
 
-    def test_sgd(self):
-        optimizer = optimizers.SGD([self.x], lr=0.1)
-        optimizer.step()
-        assert all(self.x.data == [4.9, 6.9, 8.9])
+    def test_zero(self):
+        optimizer = optimizers.Optimizer([self.x])
+        assert (self.x.grad is not None)
         optimizer.zero()
         assert (self.x.grad is None)
+
+    def test_sgd(self):
+        optimizer = optimizers.SGD([self.x], lr=0.1)
+        test_x = self.x.data - self.x.grad.data * optimizer.lr
+        optimizer.step()
+        assert all(self.x.data == test_x)
+
+    def test_rmsprop(self):
+        optimizer = optimizers.RMSprop([self.x], lr=0.1)
+        m_avg = optimizer.decay * 0 + (1.0 - optimizer.decay) * self.x.grad.data
+        test_x = self.x.data - (self.x.grad.data * optimizer.lr) / (Tensor.sqrt(m_avg) + optimizer.epsilon)
+        optimizer.step()
+        assert all(self.x.data == test_x)
