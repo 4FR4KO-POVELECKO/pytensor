@@ -1,5 +1,5 @@
 from pytensor.tensor import Tensor
-from pytensor.optimizers import SGD
+from pytensor import optimizers
 import numpy as np
 np.random.seed(0)
 
@@ -22,7 +22,7 @@ class FirstNN:
         return ((self.prediction - self.y_train) * (self.prediction - self.y_train)).sum(0)
 
     def train(self, epochs=10, alpha=0.1, output=True):
-        optimizer = SGD(params=self.w, lr=alpha)
+        optimizer = optimizers.SGD(params=self.w, lr=alpha)
         for i in range(epochs):
             self.loss.backward(Tensor(np.ones_like(self.loss.data)))
             optimizer.step()

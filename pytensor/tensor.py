@@ -17,7 +17,7 @@ class Tensor(object):
     @classmethod
     def zeros(cls, *shape, **kwargs):
         return cls(np.zeros(shape), **kwargs)
-    
+
     @staticmethod
     def sqrt(x):
         return np.sqrt(x)
