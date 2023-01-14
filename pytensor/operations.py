@@ -1,4 +1,4 @@
-from pytensor.tensor import Operation
+from pytensor.tensor import Operation, Tensor
 
 
 class Add(Operation):
@@ -8,14 +8,6 @@ class Add(Operation):
     def backward(self, grad):
         self.parents[0].backward(grad)
         self.parents[1].backward(grad)
-
-
-class Neg(Operation):
-    def forward(self, x):
-        return self.new_tensor(x * -1)
-
-    def backward(self, grad):
-        self.parents[0].backward(grad.neg())
 
 
 class Sub(Operation):
@@ -38,6 +30,38 @@ class Mul(Operation):
         self.parents[0].backward(new)
         new = grad * self.parents[0]
         self.parents[1].backward(new)
+
+
+class Pow(Operation):
+    def forward(self, x, y):
+        return self.new_tensor(x**y)
+
+    def backward(self, grad):
+        x = self.parents[0]
+        y = self.parents[1]
+        new = grad * y * (pow(x, y) / x)
+        x.backward(new)
+        new = grad * Tensor.log(x.data) * pow(x, y)
+        y.backward(new)
+
+
+class Truediv(Operation):
+    def forward(self, x, y):
+        return self.new_tensor(x / y)
+
+    def backward(self, grad):
+        new = grad / self.parents[1]
+        self.parents[0].backward(new)
+        new = -self.parents[0] / self.parents[1]**2
+        self.parents[1].backward(new)
+
+
+class Neg(Operation):
+    def forward(self, x):
+        return self.new_tensor(x * -1)
+
+    def backward(self, grad):
+        self.parents[0].backward(grad.neg())
 
 
 class MatMul(Operation):

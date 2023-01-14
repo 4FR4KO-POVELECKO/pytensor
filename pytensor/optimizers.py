@@ -21,7 +21,7 @@ class RMSprop(Optimizer):
     def __init__(self, params, lr=0.001, decay=0.9, eps=1e-8):
         super().__init__(params, lr)
         self.decay, self.epsilon = decay, eps
-        self.m_avg = [0] * len(self.params)
+        self.m_avg = [Tensor.zeros(*t.shape) for t in self.params]
 
     def step(self):
         for i, t in enumerate(self.params):
@@ -33,8 +33,8 @@ class Adam(Optimizer):
     def __init__(self, params, lr=0.001, b1=0.9, b2=0.999, eps=1e-8):
         super().__init__(params, lr)
         self.beta_1, self.beta_2, self.epsilon = b1, b2, eps
-        self.m = [0] * len(self.params)
-        self.v = [0] * len(self.params)
+        self.m = [Tensor.zeros(*t.shape) for t in self.params]
+        self.v = [Tensor.zeros(*t.shape) for t in self.params]
 
     def step(self):
         for i, t in enumerate(self.params):

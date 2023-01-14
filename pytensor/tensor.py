@@ -5,7 +5,7 @@ import numpy as np
 
 class Tensor(object):
     def __init__(self, data: list, autograd: bool = False):
-        self.data = np.array(data)
+        self.data = data if isinstance(data, np.ndarray) else np.array(data)
         self.autograd = autograd
         self.grad: Tensor = None
         self.op: Operation = None
@@ -18,9 +18,24 @@ class Tensor(object):
     def zeros(cls, *shape, **kwargs):
         return cls(np.zeros(shape), **kwargs)
 
+    @classmethod
+    def randn(cls, *shape, **kwargs):
+        return cls(np.random.rand(shape), **kwargs)
+
     @staticmethod
     def sqrt(x):
         return np.sqrt(x)
+
+    @staticmethod
+    def log(x):
+        return np.log(x)
+
+    def assign(self, x):
+        if not isinstance(x, Tensor):
+            x = Tensor(x)
+        assert self.shape == x.shape
+        self.data = x.data
+        return x
 
     def backward(self, grad):
         if not self.autograd:
@@ -50,13 +65,12 @@ class Tensor(object):
     def add(self, x): return self.__add__(x)
     def sub(self, x): return self.__sub__(x)
     def mul(self, x): return self.__mul__(x)
+    def pow(self, x): return self.__pow__(x)
+    def truediv(self, x): return self.__truediv__(x)
     def neg(self): return self.__neg__()
 
     def __add__(self, x):
         return self._execute(Tensor._add, self, x)
-
-    def __neg__(self):
-        return self._execute(Tensor._neg, self)
 
     def __sub__(self, x):
         return self._execute(Tensor._sub, self, x)
@@ -64,8 +78,20 @@ class Tensor(object):
     def __mul__(self, x):
         return self._execute(Tensor._mul, self, x)
 
+    def __pow__(self, x):
+        return self._execute(Tensor._pow, self, x)
+
+    def __truediv__(self, x):
+        return self._execute(Tensor._truediv, self, x)
+
+    def __neg__(self):
+        return self._execute(Tensor._neg, self)
+
     def __repr__(self): return str(self.data.__repr__())
     def __str__(self): return str(self.data.__str__())
+
+    def __setitem__(self, x, value): self.data[x] = value
+    def __getitem__(self, x): return self.data[x]
 
 
 class Operation(object):
@@ -89,3 +115,9 @@ class Operation(object):
 # operation.Add -> Tensor._add ...
 for name, cls in inspect.getmembers(importlib.import_module('pytensor.operations'), inspect.isclass):
     setattr(Tensor, '_' + name.lower(), cls)
+
+# Задаем операции с присваиванием и отраженные операции
+for name in ['add', 'sub', 'mul', 'pow', 'truediv']:
+    fxn = getattr(Tensor, name)
+    setattr(Tensor, f"__i{name}__", lambda self, x: self.assign(fxn(self.data, x)))
+    setattr(Tensor, f"__r{name}__", lambda self, x: fxn(self.data, x))

@@ -7,6 +7,11 @@ class TestOperation:
         self.a = Tensor([1, 2, 3], autograd=True)
         self.b = Tensor([4, 5, 6], autograd=True)
 
+    def round_array(self, x):
+        for i, v in enumerate(x):
+            x[i] = round(v, 2)
+        return x
+
     def test_add(self):
         operation = operations.Add(self.a, self.b)
 
@@ -36,6 +41,16 @@ class TestOperation:
         assert all(self.a.grad.data == [1, 1, 1])
         assert all(self.b.grad.data == [-1, -1, -1])
 
+    def test_truediv(self):
+        operation = operations.Truediv(self.a, self.b)
+
+        f = operation.forward(self.a.data, self.b.data)
+        assert all(f.data == [0.25, 0.4, 0.5])
+
+        operation.backward(Tensor([1, 1, 1]))
+        assert all(self.round_array(self.a.grad.data) == [0.25, 0.20, 0.17])
+        assert all(self.round_array(self.b.grad.data) == [-0.06, -0.08, -0.08])
+
     def test_mul(self):
         operation = operations.Mul(self.a, self.b)
 
@@ -55,6 +70,16 @@ class TestOperation:
         operation.backward(Tensor([1, 1, 1]))
         assert all(self.a.grad.data == [15])
         assert all(self.b.grad.data == [6])
+
+    def test_pow(self):
+        operation = operations.Pow(self.a, self.b)
+
+        f = operation.forward(self.a.data, self.b.data)
+        assert all(f.data == [1, 32, 729])
+
+        operation.backward(Tensor([1, 1, 1]))
+        assert all(self.a.grad.data == [4, 80, 1458])
+        assert all(self.round_array(self.b.grad.data) == [0, 22.18, 800.89])
 
     def test_transpose(self):
         x = Tensor([self.a.data, self.b.data], autograd=True)

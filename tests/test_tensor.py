@@ -39,6 +39,10 @@ class TestTensor:
         assert isinstance(t.op, operations.Sub)
         t = self.a * self.b
         assert isinstance(t.op, operations.Mul)
+        t = self.a / self.b
+        assert isinstance(t.op, operations.Truediv)
+        t = self.a ** self.b
+        assert isinstance(t.op, operations.Pow)
         t = self.a.matmul(self.b)
         assert isinstance(t.op, operations.MatMul)
         t = self.a.transpose()
@@ -47,3 +51,9 @@ class TestTensor:
         assert isinstance(t.op, operations.Sum)
         t = self.a.expand(0, 2)
         assert isinstance(t.op, operations.Expand)
+
+    def test_zeros(self):
+        x = Tensor.zeros(1)
+        assert x.data == [0]
+        x = Tensor.zeros(1, 2)
+        assert all(x.data.all() == [[0], [0]])
