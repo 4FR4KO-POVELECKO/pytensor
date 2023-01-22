@@ -51,3 +51,13 @@ class Sequential(Layer):
 class MSELoss(Layer):
     def forward(self, prediction, target):
         return ((prediction - target)*(prediction - target)).sum(0)
+
+
+class Sigmoid(Layer):
+    def forward(self, input_data):
+        return input_data.sigmoid()
+
+
+class Tanh(Layer):
+    def forward(self, input_data):
+        return input_data.tanh()
