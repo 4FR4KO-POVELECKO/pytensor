@@ -46,3 +46,8 @@ class Sequential(Layer):
             for layer in self.layers:
                 self.params += layer.params
         return self.params
+
+
+class MSELoss(Layer):
+    def forward(self, prediction, target):
+        return ((prediction - target)*(prediction - target)).sum(0)

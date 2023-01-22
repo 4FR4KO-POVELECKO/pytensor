@@ -1,5 +1,5 @@
 from pytensor.tensor import Tensor
-from pytensor.layers import Sequential, Linear
+from pytensor.layers import Sequential, Linear, MSELoss
 from pytensor import optimizers
 import numpy as np
 np.random.seed(0)
@@ -13,7 +13,9 @@ class FirstNN:
         self.model = Sequential()
         self.model.add(Linear(2, 3, bias=True))
         self.model.add(Linear(3, 1, bias=True))
+
         self.optimizer = optimizers.SGD(params=self.model.get_params())
+        self.criterion = MSELoss()
 
     @property
     def prediction(self):
@@ -21,7 +23,7 @@ class FirstNN:
 
     @property
     def loss(self):
-        return ((self.prediction - self.y_train) * (self.prediction - self.y_train)).sum(0)
+        return self.criterion.forward(self.prediction, self.y_train)
 
     def train(self, epochs=10, alpha=0.1, output=True):
         self.optimizer.lr = alpha
