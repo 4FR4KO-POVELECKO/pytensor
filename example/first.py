@@ -1,8 +1,6 @@
 from pytensor.tensor import Tensor
 from pytensor.layers import Sequential, Linear, MSELoss, Sigmoid, Tanh
 from pytensor import optimizers
-import numpy as np
-np.random.seed(0)
 
 
 class FirstNN:
@@ -30,7 +28,7 @@ class FirstNN:
     def train(self, epochs=10, alpha=1, output=True):
         self.optimizer.lr = alpha
         for i in range(epochs):
-            self.loss.backward(Tensor(np.ones_like(self.loss.data)))
+            self.loss.backward(Tensor.ones_like(self.loss.data))
             self.optimizer.step()
             self.optimizer.zero()
 
@@ -38,7 +36,7 @@ class FirstNN:
                 print(f'Epoch: {i}. Loss: {self.loss}.')
 
     def test(self):
-        return all(np.around(self.prediction.data) == self.y_train.data)
+        return all(Tensor.np.around(self.prediction.data) == self.y_train.data)
 
 
 if __name__ == '__main__':
