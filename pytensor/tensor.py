@@ -20,7 +20,7 @@ class Tensor(object):
 
     @classmethod
     def randn(cls, *shape, **kwargs):
-        return cls(np.random.rand(shape), **kwargs)
+        return cls(np.random.rand(*shape), **kwargs)
 
     @staticmethod
     def sqrt(x):
@@ -89,6 +89,8 @@ class Tensor(object):
 
     def __repr__(self): return str(self.data.__repr__())
     def __str__(self): return str(self.data.__str__())
+
+    def __len__(self): return len(self.data)
 
     def __setitem__(self, x, value): self.data[x] = value
     def __getitem__(self, x): return self.data[x]

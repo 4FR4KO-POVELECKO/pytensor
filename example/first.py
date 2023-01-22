@@ -1,4 +1,5 @@
 from pytensor.tensor import Tensor
+from pytensor.layers import Sequential, Linear
 from pytensor import optimizers
 import numpy as np
 np.random.seed(0)
@@ -9,24 +10,25 @@ class FirstNN:
         self.x_train = Tensor([[0, 0], [0, 1], [1, 0], [1, 1]], autograd=True)
         self.y_train = Tensor([[0], [1], [0], [1]], autograd=True)
 
-        self.w = list()
-        self.w.append(Tensor(np.random.rand(2, 3), autograd=True))
-        self.w.append(Tensor(np.random.rand(3, 1), autograd=True))
+        self.model = Sequential()
+        self.model.add(Linear(2, 3, bias=True))
+        self.model.add(Linear(3, 1, bias=True))
+        self.optimizer = optimizers.SGD(params=self.model.get_params())
 
     @property
     def prediction(self):
-        return self.x_train.matmul(self.w[0]).matmul(self.w[1])
+        return self.model.forward(self.x_train)
 
     @property
     def loss(self):
         return ((self.prediction - self.y_train) * (self.prediction - self.y_train)).sum(0)
 
     def train(self, epochs=10, alpha=0.1, output=True):
-        optimizer = optimizers.SGD(params=self.w, lr=alpha)
+        self.optimizer.lr = alpha
         for i in range(epochs):
             self.loss.backward(Tensor(np.ones_like(self.loss.data)))
-            optimizer.step()
-            optimizer.zero()
+            self.optimizer.step()
+            self.optimizer.zero()
 
             if output:
                 print(f'Epoch: {i}. Loss: {self.loss}.')
