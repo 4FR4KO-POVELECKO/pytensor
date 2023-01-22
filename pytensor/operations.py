@@ -41,7 +41,7 @@ class Pow(Operation):
         y = self.parents[1]
         new = grad * y * (pow(x, y) / x)
         x.backward(new)
-        new = grad * Tensor.log(x.data) * pow(x, y)
+        new = grad * Tensor.np.log(x.data) * pow(x, y)
         y.backward(new)
 
 
@@ -112,9 +112,18 @@ class Expand(Operation):
 
 class Sigmoid(Operation):
     def forward(self, x):
-        new_data = 1 / (1 + Tensor.exp(-x))
+        new_data = 1 / (1 + Tensor.np.exp(-x))
         return self.new_tensor(new_data)
 
     def backward(self, grad):
         new = grad * (self.new * (Tensor.ones_like(grad) - self.new))
+        self.parents[0].backward(new)
+
+
+class Tanh(Operation):
+    def forward(self, x):
+        return self.new_tensor(Tensor.np.tanh(x))
+
+    def backward(self, grad):
+        new = grad * (Tensor.ones_like(grad) - (self.new * self.new))
         self.parents[0].backward(new)

@@ -124,3 +124,12 @@ class TestOperation:
 
         operation.backward(Tensor([1, 1, 1]))
         assert all(self.round_array(self.a.grad.data) == [0.20, 0.11, 0.05])
+
+    def test_tanh(self):
+        operation = operations.Tanh(self.a)
+
+        f = operation.forward(self.a)
+        assert all(self.round_array(f.data) == [0.76, 0.96, 1.])
+
+        operation.backward(Tensor([1, 1, 1]))
+        assert all(self.round_array(self.a.grad.data) == [0.42, 0.08, 0.])

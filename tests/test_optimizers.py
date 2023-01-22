@@ -24,16 +24,16 @@ class TestOptimizer:
     def test_rmsprop(self):
         optimizer = optimizers.RMSprop([self.x], lr=0.1)
         m_avg = optimizer.decay * 0 + (1.0 - optimizer.decay) * self.x.grad.data
-        test_x = self.x.data - (self.x.grad.data * optimizer.lr) / (Tensor.sqrt(m_avg) + optimizer.epsilon)
+        test_x = self.x.data - (self.x.grad.data * optimizer.lr) / (Tensor.np.sqrt(m_avg) + optimizer.epsilon)
         optimizer.step()
         assert all(self.x.data == test_x)
 
     def test_adam(self):
         optimizer = optimizers.Adam([self.x], lr=0.1)
         m = optimizer.beta_1 * 0 + (1.0 - optimizer.beta_1) * self.x.grad.data
-        v = optimizer.beta_2 * 0 + (1.0 - optimizer.beta_2) * Tensor.sqrt(self.x.grad.data)
+        v = optimizer.beta_2 * 0 + (1.0 - optimizer.beta_2) * Tensor.np.sqrt(self.x.grad.data)
         m_hat = m / (1.0 - optimizer.beta_1 ** 0+1)
         v_hat = v / (1.0 - optimizer.beta_2 ** 0+1)
-        test_x = self.x.data - (optimizer.lr * m_hat / (Tensor.sqrt(v_hat) + optimizer.epsilon))
+        test_x = self.x.data - (optimizer.lr * m_hat / (Tensor.np.sqrt(v_hat) + optimizer.epsilon))
         optimizer.step()
         assert all(self.x.data == test_x)

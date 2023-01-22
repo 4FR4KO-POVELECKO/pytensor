@@ -4,6 +4,8 @@ import numpy as np
 
 
 class Tensor(object):
+    np = np
+
     def __init__(self, data: list, autograd: bool = False):
         self.data = data if isinstance(data, np.ndarray) else np.array(data)
         self.autograd = autograd
@@ -25,18 +27,6 @@ class Tensor(object):
     @classmethod
     def ones_like(cls, *shape, **kwargs):
         return cls(np.ones_like(*shape), **kwargs)
-
-    @staticmethod
-    def sqrt(x):
-        return np.sqrt(x)
-
-    @staticmethod
-    def log(x):
-        return np.log(x)
-
-    @staticmethod
-    def exp(x):
-        return np.exp(x)
 
     def assign(self, x):
         if not isinstance(x, Tensor):
@@ -72,6 +62,9 @@ class Tensor(object):
 
     def sigmoid(self):
         return self._execute(Tensor._sigmoid, self)
+
+    def tanh(self):
+        return self._execute(Tensor._tanh, self)
 
     def add(self, x): return self.__add__(x)
     def sub(self, x): return self.__sub__(x)

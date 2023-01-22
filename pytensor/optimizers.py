@@ -26,7 +26,7 @@ class RMSprop(Optimizer):
     def step(self):
         for i, t in enumerate(self.params):
             self.m_avg[i] = self.decay * self.m_avg[i] + (1.0 - self.decay) * t.grad.data
-            t.data -= (t.grad.data * self.lr) / (Tensor.sqrt(self.m_avg[i]) + self.epsilon)
+            t.data -= (t.grad.data * self.lr) / (Tensor.np.sqrt(self.m_avg[i]) + self.epsilon)
 
 
 class Adam(Optimizer):
@@ -39,9 +39,9 @@ class Adam(Optimizer):
     def step(self):
         for i, t in enumerate(self.params):
             self.m[i] = self.beta_1 * self.m[i] + (1.0 - self.beta_1) * t.grad.data
-            self.v[i] = self.beta_2 * self.v[i] + (1.0 - self.beta_2) * Tensor.sqrt(t.grad.data)
+            self.v[i] = self.beta_2 * self.v[i] + (1.0 - self.beta_2) * Tensor.np.sqrt(t.grad.data)
 
             m_hat = self.m[i] / (1.0 - self.beta_1 ** i+1)
             v_hat = self.v[i] / (1.0 - self.beta_2 ** i+1)
 
-            t.data -= self.lr * m_hat / (Tensor.sqrt(v_hat) + self.epsilon)
+            t.data -= self.lr * m_hat / (Tensor.np.sqrt(v_hat) + self.epsilon)
