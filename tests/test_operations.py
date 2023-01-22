@@ -115,3 +115,12 @@ class TestOperation:
 
         operation.backward(Tensor([[1, 1, 1], [2, 2, 2]]))
         assert all(x.grad.data == [3, 6])
+
+    def test_sigmoid(self):
+        operation = operations.Sigmoid(self.a)
+
+        f = operation.forward(self.a)
+        assert all(self.round_array(f.data) == [0.73, 0.88, 0.95])
+
+        operation.backward(Tensor([1, 1, 1]))
+        assert all(self.round_array(self.a.grad.data) == [0.20, 0.11, 0.05])

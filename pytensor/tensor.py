@@ -22,6 +22,10 @@ class Tensor(object):
     def randn(cls, *shape, **kwargs):
         return cls(np.random.rand(*shape), **kwargs)
 
+    @classmethod
+    def ones_like(cls, *shape, **kwargs):
+        return cls(np.ones_like(*shape), **kwargs)
+
     @staticmethod
     def sqrt(x):
         return np.sqrt(x)
@@ -29,6 +33,10 @@ class Tensor(object):
     @staticmethod
     def log(x):
         return np.log(x)
+
+    @staticmethod
+    def exp(x):
+        return np.exp(x)
 
     def assign(self, x):
         if not isinstance(x, Tensor):
@@ -61,6 +69,9 @@ class Tensor(object):
 
     def matmul(self, x):
         return self._execute(Tensor._matmul, self, x)
+
+    def sigmoid(self):
+        return self._execute(Tensor._sigmoid, self)
 
     def add(self, x): return self.__add__(x)
     def sub(self, x): return self.__sub__(x)
@@ -100,6 +111,7 @@ class Operation(object):
     def __init__(self, *tensors: Tensor):
         self.parents = tensors
         self.autograd = any([tensor.autograd for tensor in tensors])
+        self.new = None
 
     def forward(self, *args):
         raise NotImplementedError(f'Метод forward не применим для {type(self)}')
@@ -110,6 +122,7 @@ class Operation(object):
     def new_tensor(self, data):
         tensor = Tensor(data, autograd=self.autograd)
         tensor.op = self
+        self.new = tensor
         return tensor
 
 

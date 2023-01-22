@@ -108,3 +108,13 @@ class Expand(Operation):
 
     def backward(self, grad):
         self.parents[0].backward(grad.sum(self.dim))
+
+
+class Sigmoid(Operation):
+    def forward(self, x):
+        new_data = 1 / (1 + Tensor.exp(-x))
+        return self.new_tensor(new_data)
+
+    def backward(self, grad):
+        new = grad * (self.new * (Tensor.ones_like(grad) - self.new))
+        self.parents[0].backward(new)
