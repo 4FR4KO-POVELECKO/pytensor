@@ -127,3 +127,18 @@ class Tanh(Operation):
     def backward(self, grad):
         new = grad * (Tensor.ones_like(grad) - (self.new * self.new))
         self.parents[0].backward(new)
+
+
+class GetItem(Operation):
+    def forward(self, x, idx):
+        new = self.new_tensor(x[idx])
+        new.save_idx = idx if isinstance(idx, Tensor.np.ndarray) else Tensor.np.array(x)
+        return new
+
+    def backward(self, grad):
+        new = Tensor.zeros_like(self.parents[0].data)
+        indices = self.new.save_idx.flatten()
+        grad = grad.data.reshape(len(indices), -1)
+        for i in range(len(indices)):
+            new[indices[i]] += grad[i]
+        self.parents[0].backward(new)

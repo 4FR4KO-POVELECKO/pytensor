@@ -21,6 +21,10 @@ class Tensor(object):
         return cls(np.zeros(shape), **kwargs)
 
     @classmethod
+    def zeros_like(cls, *shape, **kwargs):
+        return cls(np.zeros_like(*shape), **kwargs)
+
+    @classmethod
     def randn(cls, *shape, **kwargs):
         return cls(np.random.rand(*shape), **kwargs)
 
@@ -95,6 +99,10 @@ class Tensor(object):
     def __str__(self): return str(self.data.__str__())
 
     def __len__(self): return len(self.data)
+
+    def getitem(self, x):
+        x = x.data if isinstance(x, Tensor) else x
+        return self._execute(Tensor._getitem, self, x)
 
     def __setitem__(self, x, value): self.data[x] = value
     def __getitem__(self, x): return self.data[x]

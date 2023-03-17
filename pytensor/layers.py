@@ -27,6 +27,20 @@ class Linear(Layer):
         return input_data.matmul(self.weights)
 
 
+class Embedding(Layer):
+    def __init__(self, vocab_size, dim):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.dim = dim
+        w = Tensor.randn(*(vocab_size, dim)) - 0.5 / dim
+        self.weights = Tensor(w, autograd=True)
+        self.params.append(self.weights)
+
+    def forward(self, input_data):
+        output = self.weights.getitem(input_data)
+        return output
+
+
 class Sequential(Layer):
     def __init__(self, layers: list = list()):
         super().__init__()
