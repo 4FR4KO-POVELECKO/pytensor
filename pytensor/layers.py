@@ -67,6 +67,11 @@ class MSELoss(Layer):
         return ((prediction - target)*(prediction - target)).sum(0)
 
 
+class CrossEntropyLoss(Layer):
+    def forward(self, prediction, target):
+        return prediction.cross_entropy(target)
+
+
 class Sigmoid(Layer):
     def forward(self, input_data):
         return input_data.sigmoid()

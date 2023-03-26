@@ -142,3 +142,22 @@ class GetItem(Operation):
         for i in range(len(indices)):
             new[indices[i]] += grad[i]
         self.parents[0].backward(new)
+
+
+class CrossEntropy(Operation):
+    def forward(self, x, target):
+        temp = Tensor.np.exp(x.data)
+        softmax_output = temp / Tensor.np.sum(temp, axis=len(x.data.shape)-1, keepdims=True)
+        t = target.flatten()
+        p = softmax_output.reshape(len(t), -1)
+        target_dist = Tensor.np.eye(p.shape[1])[t]
+        loss = -(Tensor.np.log(p) * target_dist).sum(1).mean()
+        
+        new = self.new_tensor(loss)
+        new.softmax_output = softmax_output
+        new.target_dist = target_dist
+        return new
+    
+    def backward(self, grad):
+        dx = self.new.softmax_output - self.new.target_dist
+        self.parents[0].backward(Tensor(dx))
