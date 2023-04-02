@@ -112,7 +112,7 @@ class Expand(Operation):
 
 class Sigmoid(Operation):
     def forward(self, x):
-        new_data = 1 / (1 + Tensor.np.exp(-x))
+        new_data = 0.5 * (1 + Tensor.np.tanh(0.5 * x))
         return self.new_tensor(new_data)
 
     def backward(self, grad):
@@ -146,13 +146,15 @@ class GetItem(Operation):
 
 class CrossEntropy(Operation):
     def forward(self, x, target):
-        temp = Tensor.np.exp(x.data)
-        softmax_output = temp / Tensor.np.sum(temp, axis=len(x.data.shape)-1, keepdims=True)
+        x_max = Tensor.np.max(x.data, axis=len(x.data.shape)-1, keepdims=True)
+        x_exp = Tensor.np.exp(x.data - x_max)
+        softmax_output = x_exp / Tensor.np.sum(x_exp, axis=len(x.data.shape)-1, keepdims=True)
         t = target.flatten()
         p = softmax_output.reshape(len(t), -1)
         target_dist = Tensor.np.eye(p.shape[1])[t]
-        # TODO: RuntimeWarning: invalid value encountered in multiply
-        loss = -(Tensor.np.log(p) * target_dist).sum(1).mean()
+
+        eps = 1e-7
+        loss = -(Tensor.np.log(p + eps) * target_dist).sum(1).mean()
 
         new = self.new_tensor(loss)
         new.softmax_output = softmax_output
