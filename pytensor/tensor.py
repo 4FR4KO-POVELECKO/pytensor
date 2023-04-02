@@ -103,7 +103,7 @@ class Tensor(object):
     def getitem(self, x):
         x = x.data if isinstance(x, Tensor) else x
         return self._execute(Tensor._getitem, self, x)
-    
+
     def cross_entropy(self, x):
         x = x.data if isinstance(x, Tensor) else x
         return self._execute(Tensor._crossentropy, self, x)

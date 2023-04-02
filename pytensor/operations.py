@@ -151,13 +151,14 @@ class CrossEntropy(Operation):
         t = target.flatten()
         p = softmax_output.reshape(len(t), -1)
         target_dist = Tensor.np.eye(p.shape[1])[t]
+        # TODO: RuntimeWarning: invalid value encountered in multiply
         loss = -(Tensor.np.log(p) * target_dist).sum(1).mean()
-        
+
         new = self.new_tensor(loss)
         new.softmax_output = softmax_output
         new.target_dist = target_dist
         return new
-    
+
     def backward(self, grad):
         dx = self.new.softmax_output - self.new.target_dist
         self.parents[0].backward(Tensor(dx))
