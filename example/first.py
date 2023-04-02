@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from pytensor.tensor import Tensor
 from pytensor.layers import Sequential, Linear, MSELoss, Sigmoid, Tanh
 from pytensor import optimizers
