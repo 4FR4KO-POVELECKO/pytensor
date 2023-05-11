@@ -70,6 +70,9 @@ class Tensor(object):
     def tanh(self):
         return self._execute(Tensor._tanh, self)
 
+    def softmax(self):
+        return self._execute(Tensor._softmax, self)
+
     def add(self, x): return self.__add__(x)
     def sub(self, x): return self.__sub__(x)
     def mul(self, x): return self.__mul__(x)

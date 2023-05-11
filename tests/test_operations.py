@@ -134,4 +134,5 @@ class TestOperation:
         operation.backward(Tensor([1, 1, 1]))
         assert all(self.round_array(self.a.grad.data) == [0.42, 0.08, 0.])
 
+    # TODO: test_softmax
     # TODO: test_cross_entropy

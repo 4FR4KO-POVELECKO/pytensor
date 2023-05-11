@@ -129,6 +129,20 @@ class Tanh(Operation):
         self.parents[0].backward(new)
 
 
+class Softmax(Operation):
+    def forward(self, x):
+        exp_x = Tensor.np.exp(x - Tensor.np.max(x, axis=-1, keepdims=True))
+        self.output = exp_x / Tensor.np.sum(exp_x, axis=-1, keepdims=True)
+        return self.new_tensor(self.output)
+
+    def backward(self, grad):
+        jacobian = Tensor.np.expand_dims(self.output, axis=-1) * \
+                   Tensor.np.expand_dims(Tensor.np.eye(self.output.shape[-1]), axis=0)
+        diagonal = Tensor.np.expand_dims(self.output, axis=-1) * (1 - Tensor.np.expand_dims(self.output, axis=-2))
+        new = Tensor.np.sum(jacobian - diagonal, axis=-2) @ grad
+        self.parents[0].backward(new)
+
+
 class GetItem(Operation):
     def forward(self, x, idx):
         new = self.new_tensor(x[idx])
