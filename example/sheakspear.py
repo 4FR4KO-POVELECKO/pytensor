@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pytensor.tensor import Tensor
-from pytensor.layers import Embedding, RNNCell, CrossEntropyLoss
+from pytensor.layers import Embedding, LSTMCell, CrossEntropyLoss
 from pytensor.optimizers import SGD
 from datasets.shakespear import get_data
 
@@ -13,7 +13,8 @@ class NN:
         self.indices = Tensor.np.array(self.data)
         self.vocab = Tensor.np.array(self.vocab)
         self.embed = Embedding(vocab_size=len(self.vocab), dim=512)
-        self.model = RNNCell(n_inputs=512, n_hidden=512, n_output=len(self.vocab))
+        self.model = LSTMCell(n_inputs=512, n_hidden=512, n_output=len(self.vocab))
+        self.model.w_ho.weights.data *= 0
         self.criterion = CrossEntropyLoss()
         self.optim = SGD(params=(self.model.params + self.embed.params))
 
@@ -35,7 +36,7 @@ class NN:
 
         return s
 
-    def train(self, epochs=100, batch_size=32, bptt=16, lr=0.05, output=True):
+    def train(self, epochs=100, batch_size=16, bptt=25, lr=0.05, output=True):
         self.optim.lr = lr
         n_batches = int(self.indices.shape[0] / batch_size)
         trimmed_indices = self.indices[:n_batches*batch_size]
@@ -56,9 +57,9 @@ class NN:
             total_loss = 0
 
             hidden = self.model.init_hidden(batch_size=batch_size)
-            print(len(input_batches))
             for b in range(len(input_batches)):
-                hidden = Tensor(hidden.data, autograd=True)
+                hidden = (Tensor(hidden[0].data, autograd=True),
+                          Tensor(hidden[1].data, autograd=True))
                 loss = None
                 losses = list()
                 for t in range(bptt):
