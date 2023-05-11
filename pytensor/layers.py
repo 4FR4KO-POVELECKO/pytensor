@@ -49,7 +49,7 @@ class RNNCell(Layer):
         self.n_output = n_output
 
         if isinstance(activation, str):
-            activation = activation_classes.get(activation, None)
+            activation = ACTIVATION_CLASSES.get(activation, None)
         if isinstance(activation, type):
             self.activation = activation()
         elif isinstance(activation, Activation):
@@ -77,6 +77,57 @@ class RNNCell(Layer):
 
     def init_hidden(self, batch_size=1):
         return Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
+
+
+class LSTMCell(Layer):
+    def __init__(self, n_inputs, n_hidden, n_output):
+        super().__init__()
+        self.n_inputs = n_inputs
+        self.n_hidden = n_hidden
+        self.n_output = n_output
+
+        self.xf = Linear(n_inputs, n_hidden)
+        self.xi = Linear(n_inputs, n_hidden)
+        self.xo = Linear(n_inputs, n_hidden)
+        self.xc = Linear(n_inputs, n_hidden)
+        self.hf = Linear(n_hidden, n_hidden, bias=False)
+        self.hi = Linear(n_hidden, n_hidden, bias=False)
+        self.ho = Linear(n_hidden, n_hidden, bias=False)
+        self.hc = Linear(n_hidden, n_hidden, bias=False)
+
+        self.w_ho = Linear(n_hidden, n_output, bias=False)
+
+        self.params += self.xf.params
+        self.params += self.xi.params
+        self.params += self.xo.params
+        self.params += self.xc.params
+        self.params += self.hf.params
+        self.params += self.hi.params
+        self.params += self.ho.params
+        self.params += self.hc.params
+
+        self.params += self.w_ho.params
+
+    def forward(self, input, hidden):
+        prev_hidden = hidden[0]
+        prev_cell = hidden[1]
+
+        f = (self.xf.forward(input) + self.hf.forward(prev_hidden)).sigmoid()
+        i = (self.xi.forward(input) + self.hi.forward(prev_hidden)).sigmoid()
+        o = (self.xo.forward(input) + self.ho.forward(prev_hidden)).sigmoid()
+        g = (self.xc.forward(input) + self.hc.forward(prev_hidden)).tanh()
+        c = (f * prev_cell) + (i * g)
+        h = o * c.tanh()
+
+        output = self.w_ho.forward(h)
+        return output, (h, c)
+
+    def init_hidden(self, batch_size=1):
+        h = Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
+        c = Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
+        h.data[:, 0] += 1
+        c.data[:, 0] += 1
+        return (h, c)
 
 
 class Sequential(Layer):
@@ -128,7 +179,7 @@ class Tanh(Layer, Activation):
         return input_data.tanh()
 
 
-activation_classes = {
+ACTIVATION_CLASSES = {
     'sigmoid': Sigmoid,
     'tanh': Tanh,
 }
