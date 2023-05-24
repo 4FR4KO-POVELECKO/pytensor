@@ -134,5 +134,13 @@ class TestOperation:
         operation.backward(Tensor([1, 1, 1]))
         assert all(self.round_array(self.a.grad.data) == [0.42, 0.08, 0.])
 
-    # TODO: test_softmax
+    def test_softmax(self):
+        operation = operations.Softmax(self.a)
+
+        f = operation.forward(self.a)
+        assert all(self.round_array(f.data) == [0.09, 0.24, 0.67])
+
+        operation.backward(Tensor([1, 1, 1]))
+        assert self.a.grad == [-1]
+
     # TODO: test_cross_entropy
