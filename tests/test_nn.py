@@ -1,4 +1,4 @@
-from example.first import FirstNN
+from examples.first import FirstNN
 
 
 class TestNN:
