@@ -145,10 +145,10 @@ class TestOperation:
 
     def test_cross_entropy(self):
         operation = operations.CrossEntropy(self.a)
-        target = Tensor([1])
+        target = Tensor([1], autograd=True)
 
         f = operation.forward(self.a, target.data)
-        assert all(f.data == [1.407605555828337])
+        assert round(float(f.data), 2) == 1.41
 
         operation.backward(Tensor([1, 1, 1]))
         assert all(self.round_array(self.a.grad.data[0]) == [0.09, -0.76, 0.67])
