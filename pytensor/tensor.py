@@ -7,6 +7,10 @@ class Tensor(object):
     np = np
 
     def __init__(self, data: list, autograd: bool = False):
+        """
+        :param data(list): np.array or list
+        :param autograd(bool): default False
+        """
         self.data = data if isinstance(data, np.ndarray) else np.array(data)
         self.autograd = autograd
         self.grad: Tensor = None
@@ -48,7 +52,7 @@ class Tensor(object):
             self.op.backward(grad)
 
     def _execute(self, operation, *data):
-        tensors = [tensor for tensor in data if type(tensor) is Tensor]  # отбираем только тензоры
+        tensors = [tensor for tensor in data if type(tensor) is Tensor]  # only tensors
         op = operation(*tensors)
         return op.forward(*[d.data if type(d) is Tensor else d for d in data])
 
@@ -122,10 +126,10 @@ class Operation(object):
         self.new = None
 
     def forward(self, *args):
-        raise NotImplementedError(f'Метод forward не применим для {type(self)}')
+        raise NotImplementedError()
 
     def backward(self, grad: Tensor):
-        raise NotImplementedError(f'Метод backward не применим для {type(self)}')
+        raise NotImplementedError()
 
     def new_tensor(self, data):
         tensor = Tensor(data, autograd=self.autograd)
@@ -134,12 +138,11 @@ class Operation(object):
         return tensor
 
 
-# Задаем операции
+# Set ops
 # operation.Add -> Tensor._add ...
 for name, cls in inspect.getmembers(importlib.import_module('pytensor.operations'), inspect.isclass):
     setattr(Tensor, '_' + name.lower(), cls)
 
-# Задаем операции с присваиванием и отраженные операции
 for name in ['add', 'sub', 'mul', 'pow', 'truediv']:
     fxn = getattr(Tensor, name)
     setattr(Tensor, f"__i{name}__", lambda self, x: self.assign(fxn(self.data, x)))

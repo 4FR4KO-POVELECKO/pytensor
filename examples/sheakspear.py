@@ -12,8 +12,8 @@ class NN:
         self.data, self.vocab, self.word2index = get_data()
         self.indices = Tensor.np.array(self.data)
         self.vocab = Tensor.np.array(self.vocab)
-        self.embed = Embedding(vocab_size=len(self.vocab), dim=512)
-        self.model = LSTMCell(n_inputs=512, n_hidden=512, n_output=len(self.vocab))
+        self.embed = Embedding(v_size=len(self.vocab), dim=512)
+        self.model = LSTMCell(in_size=512, h_size=512, out_size=len(self.vocab))
         self.model.w_ho.weights.data *= 0
         self.criterion = CrossEntropyLoss()
         self.optim = SGD(params=(self.model.params + self.embed.params))

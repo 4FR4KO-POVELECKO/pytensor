@@ -9,9 +9,9 @@ class Layer(object):
 class Linear(Layer):
     def __init__(self, in_size: int, out_size: int, bias: bool = True):
         """
-        :param in_size(int): размер входной выборки
-        :param out_size(int): размер выходной выборки
-        :param bias(bool): если установлено значение False, слой будет обучаться без смещения. По умолчанию: True
+        :param in_size(int): input size
+        :param out_size(int): output size
+        :param bias(bool): default True
         """
         super().__init__()
         self.weights = Tensor.randn(*(in_size, out_size), autograd=True)
@@ -28,11 +28,13 @@ class Linear(Layer):
 
 
 class Embedding(Layer):
-    def __init__(self, vocab_size, dim):
+    def __init__(self, voc_size: int, dim_size: int):
+        """
+        :param voc_size(int): vocab size
+        :param dim_size(int): dimension size
+        """
         super().__init__()
-        self.vocab_size = vocab_size
-        self.dim = dim
-        w = Tensor.randn(*(vocab_size, dim)) - 0.5 / dim
+        w = Tensor.randn(*(voc_size, dim_size)) - 0.5 / dim_size
         self.weights = Tensor(w, autograd=True)
         self.params.append(self.weights)
 
@@ -42,11 +44,15 @@ class Embedding(Layer):
 
 
 class RNNCell(Layer):
-    def __init__(self, n_inputs, n_hidden, n_output, activation='sigmoid'):
+    def __init__(self, in_size: int, h_size: int, out_size: int, activation='sigmoid'):
+        """
+        :param in_size(int): input size
+        :param h_size(int): hidden size
+        :param out_size(int): output size
+        :param activation(str, Activation, Activation()): activation class, default 'sigmoid'
+        """
         super().__init__()
-        self.n_inputs = n_inputs
-        self.n_hidden = n_hidden
-        self.n_output = n_output
+        self.hidden_size = h_size
 
         if isinstance(activation, str):
             activation = ACTIVATION_CLASSES.get(activation, None)
@@ -60,9 +66,9 @@ class RNNCell(Layer):
         if not self.activation:
             raise Exception(f'Non-linearity not found: {activation}.')
 
-        self.w_ih = Linear(n_inputs, n_hidden)
-        self.w_hh = Linear(n_hidden, n_hidden)
-        self.w_ho = Linear(n_hidden, n_output)
+        self.w_ih = Linear(in_size, h_size)
+        self.w_hh = Linear(h_size, h_size)
+        self.w_ho = Linear(h_size, out_size)
 
         self.params += self.w_ih.params
         self.params += self.w_hh.params
@@ -76,26 +82,29 @@ class RNNCell(Layer):
         return output, new_hidden
 
     def init_hidden(self, batch_size=1):
-        return Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
+        return Tensor.zeros(*(batch_size, self.hidden_size), autograd=True)
 
 
 class LSTMCell(Layer):
-    def __init__(self, n_inputs, n_hidden, n_output):
+    def __init__(self, in_size: int, h_size: int, out_size: int):
+        """
+        :param in_size(int): input size
+        :param h_size(int): hidden size
+        :param out_size(int): output size
+        """
         super().__init__()
-        self.n_inputs = n_inputs
-        self.n_hidden = n_hidden
-        self.n_output = n_output
+        self.hidden_size = h_size
 
-        self.xf = Linear(n_inputs, n_hidden)
-        self.xi = Linear(n_inputs, n_hidden)
-        self.xo = Linear(n_inputs, n_hidden)
-        self.xc = Linear(n_inputs, n_hidden)
-        self.hf = Linear(n_hidden, n_hidden, bias=False)
-        self.hi = Linear(n_hidden, n_hidden, bias=False)
-        self.ho = Linear(n_hidden, n_hidden, bias=False)
-        self.hc = Linear(n_hidden, n_hidden, bias=False)
+        self.xf = Linear(in_size, h_size)
+        self.xi = Linear(in_size, h_size)
+        self.xo = Linear(in_size, h_size)
+        self.xc = Linear(in_size, h_size)
+        self.hf = Linear(h_size, h_size, bias=False)
+        self.hi = Linear(h_size, h_size, bias=False)
+        self.ho = Linear(h_size, h_size, bias=False)
+        self.hc = Linear(h_size, h_size, bias=False)
 
-        self.w_ho = Linear(n_hidden, n_output, bias=False)
+        self.w_ho = Linear(h_size, out_size, bias=False)
 
         self.params += self.xf.params
         self.params += self.xi.params
@@ -123,8 +132,8 @@ class LSTMCell(Layer):
         return output, (h, c)
 
     def init_hidden(self, batch_size=1):
-        h = Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
-        c = Tensor.zeros(*(batch_size, self.n_hidden), autograd=True)
+        h = Tensor.zeros(*(batch_size, self.hidden_size), autograd=True)
+        c = Tensor.zeros(*(batch_size, self.hidden_size), autograd=True)
         h.data[:, 0] += 1
         c.data[:, 0] += 1
         return (h, c)
@@ -132,6 +141,9 @@ class LSTMCell(Layer):
 
 class Sequential(Layer):
     def __init__(self, layers: list = list()):
+        """
+        :param layers(Layer): layers list
+        """
         super().__init__()
         self.layers = layers
 
