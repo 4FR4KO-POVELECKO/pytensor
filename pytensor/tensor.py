@@ -140,13 +140,16 @@ class Operation(object):
 
 def hello_world(my_array):
     a = 0
-    
+
     try:
         print('bye world!')
     except:
         print('what?')
 
     return 3 + 10
+
+def mat_mull():
+    return 0
 
 
 # Set ops
