@@ -138,6 +138,17 @@ class Operation(object):
         return tensor
 
 
+def hello_world(my_array):
+    a = 0
+    
+    try:
+        print('bye world!')
+    except:
+        print('what?')
+
+    return 3 + 10
+
+
 # Set ops
 # operation.Add -> Tensor._add ...
 for name, cls in inspect.getmembers(importlib.import_module('pytensor.operations'), inspect.isclass):
