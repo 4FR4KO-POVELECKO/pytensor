@@ -4,3 +4,4 @@ env
 Makefile
 example/__init__.py
 .coverage
+.DS_Store

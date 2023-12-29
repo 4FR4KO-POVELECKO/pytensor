@@ -166,7 +166,7 @@ class Sequential(Layer):
 # Loss
 
 class MSELoss(Layer):
-    def forward(self, prediction, target):
+    def forward(self, prediction: Tensor, target: Tensor) -> Tensor:
         return ((prediction - target)*(prediction - target)).sum(0)
 
 
