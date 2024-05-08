@@ -3,7 +3,7 @@ from pytensor.tensor import Tensor
 
 
 class Optimizer(object):
-    def __init__(self, params, lr=0.001):
+    def __init__(self, params: list[Tensor], lr=0.001):
         self.params = params
         self.lr = lr
 
@@ -15,7 +15,7 @@ class Optimizer(object):
 class SGD(Optimizer):
     def step(self):
         for t in self.params:
-            t.data -= t.grad.data * self.lr
+            t.data -= t.grad * self.lr
 
 
 class RMSprop(Optimizer):
@@ -26,8 +26,8 @@ class RMSprop(Optimizer):
 
     def step(self):
         for i, t in enumerate(self.params):
-            self.m_avg[i] = self.decay * self.m_avg[i] + (1.0 - self.decay) * t.grad.data
-            t.data -= (t.grad.data * self.lr) / (np.sqrt(self.m_avg[i]) + self.epsilon)
+            self.m_avg[i] = t.grad * self.decay * self.m_avg[i] + (1.0 - self.decay)
+            t.data -= (t.grad * self.lr) / (np.sqrt(self.m_avg[i]) + self.epsilon)
 
 
 class Adam(Optimizer):
@@ -39,8 +39,8 @@ class Adam(Optimizer):
 
     def step(self):
         for i, t in enumerate(self.params):
-            self.m[i] = self.beta_1 * self.m[i] + (1.0 - self.beta_1) * t.grad.data
-            self.v[i] = self.beta_2 * self.v[i] + (1.0 - self.beta_2) * np.sqrt(t.grad.data)
+            self.m[i] = self.beta_1 * self.m[i] + t.grad * (1.0 - self.beta_1)
+            self.v[i] = self.beta_2 * self.v[i] + np.sqrt(t.grad) * (1.0 - self.beta_2)
 
             m_hat = self.m[i] / (1.0 - self.beta_1 ** i+1)
             v_hat = self.v[i] / (1.0 - self.beta_2 ** i+1)
