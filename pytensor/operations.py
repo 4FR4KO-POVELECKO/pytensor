@@ -92,7 +92,7 @@ class Sum(Operation):
         return self.new_tensor(x.sum(dim))
 
     def backward(self, grad):
-        ds = self.parents[0].data.shape[self.dim]
+        ds = self.parents[0].shape[self.dim]
         self.parents[0].backward(grad.expand(self.dim, ds))
 
 
@@ -161,9 +161,9 @@ class GetItem(Operation):
 
 class CrossEntropy(Operation):
     def forward(self, x, target):
-        x_max = np.max(x.data, axis=len(x.data.shape)-1, keepdims=True)
+        x_max = np.max(x.data, axis=len(x.shape)-1, keepdims=True)
         x_exp = np.exp(x.data - x_max)
-        softmax_output = x_exp / np.sum(x_exp, axis=len(x.data.shape)-1, keepdims=True)
+        softmax_output = x_exp / np.sum(x_exp, axis=len(x.shape)-1, keepdims=True)
         t = target.flatten()
         p = softmax_output.reshape(len(t), -1)
         target_dist = np.eye(p.shape[1])[t]
