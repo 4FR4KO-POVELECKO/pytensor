@@ -4,8 +4,6 @@ import numpy as np
 
 
 class Tensor(object):
-    np = np
-
     def __init__(self, data: list, autograd: bool = False):
         """
         :param data(list): np.array or list

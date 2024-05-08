@@ -1,3 +1,4 @@
+import numpy as np
 from pytensor.tensor import Operation, Tensor
 
 
@@ -41,7 +42,7 @@ class Pow(Operation):
         y = self.parents[1]
         new = grad * y * (pow(x, y) / x)
         x.backward(new)
-        new = grad * Tensor.np.log(x.data) * pow(x, y)
+        new = grad * np.log(x.data) * pow(x, y)
         y.backward(new)
 
 
@@ -112,7 +113,7 @@ class Expand(Operation):
 
 class Sigmoid(Operation):
     def forward(self, x):
-        new_data = 0.5 * (1 + Tensor.np.tanh(0.5 * x))
+        new_data = 0.5 * (1 + np.tanh(0.5 * x))
         return self.new_tensor(new_data)
 
     def backward(self, grad):
@@ -122,7 +123,7 @@ class Sigmoid(Operation):
 
 class Tanh(Operation):
     def forward(self, x):
-        return self.new_tensor(Tensor.np.tanh(x))
+        return self.new_tensor(np.tanh(x))
 
     def backward(self, grad):
         new = grad * (Tensor.ones_like(grad) - (self.new * self.new))
@@ -131,22 +132,22 @@ class Tanh(Operation):
 
 class Softmax(Operation):
     def forward(self, x):
-        exp_x = Tensor.np.exp(x - Tensor.np.max(x, axis=-1, keepdims=True))
-        self.output = exp_x / Tensor.np.sum(exp_x, axis=-1, keepdims=True)
+        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        self.output = exp_x / np.sum(exp_x, axis=-1, keepdims=True)
         return self.new_tensor(self.output)
 
     def backward(self, grad):
-        jacobian = Tensor.np.expand_dims(self.output, axis=-1) * \
-                   Tensor.np.expand_dims(Tensor.np.eye(self.output.shape[-1]), axis=0)
-        diagonal = Tensor.np.expand_dims(self.output, axis=-1) * (1 - Tensor.np.expand_dims(self.output, axis=-2))
-        new = Tensor.np.sum(jacobian - diagonal, axis=-2) @ grad
+        jacobian = np.expand_dims(self.output, axis=-1) * \
+                   np.expand_dims(np.eye(self.output.shape[-1]), axis=0)
+        diagonal = np.expand_dims(self.output, axis=-1) * (1 - np.expand_dims(self.output, axis=-2))
+        new = np.sum(jacobian - diagonal, axis=-2) @ grad
         self.parents[0].backward(new)
 
 
 class GetItem(Operation):
     def forward(self, x, idx):
         new = self.new_tensor(x[idx])
-        new.save_idx = idx if isinstance(idx, Tensor.np.ndarray) else Tensor.np.array(x)
+        new.save_idx = idx if isinstance(idx, np.ndarray) else np.array(x)
         return new
 
     def backward(self, grad):
@@ -160,15 +161,15 @@ class GetItem(Operation):
 
 class CrossEntropy(Operation):
     def forward(self, x, target):
-        x_max = Tensor.np.max(x.data, axis=len(x.data.shape)-1, keepdims=True)
-        x_exp = Tensor.np.exp(x.data - x_max)
-        softmax_output = x_exp / Tensor.np.sum(x_exp, axis=len(x.data.shape)-1, keepdims=True)
+        x_max = np.max(x.data, axis=len(x.data.shape)-1, keepdims=True)
+        x_exp = np.exp(x.data - x_max)
+        softmax_output = x_exp / np.sum(x_exp, axis=len(x.data.shape)-1, keepdims=True)
         t = target.flatten()
         p = softmax_output.reshape(len(t), -1)
-        target_dist = Tensor.np.eye(p.shape[1])[t]
+        target_dist = np.eye(p.shape[1])[t]
 
         eps = 1e-7
-        loss = -(Tensor.np.log(p + eps) * target_dist).sum(1).mean()
+        loss = -(np.log(p + eps) * target_dist).sum(1).mean()
 
         new = self.new_tensor(loss)
         new.softmax_output = softmax_output

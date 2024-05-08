@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 from pytensor.tensor import Tensor
 from pytensor.layers import Sequential, Linear, MSELoss, Sigmoid, Tanh
 from pytensor import optimizers
@@ -37,7 +38,7 @@ class FirstNN:
                 print(f'Epoch: {i}. Loss: {self.loss}.')
 
     def test(self):
-        return all(Tensor.np.around(self.prediction.data) == self.y_train.data)
+        return all(np.around(self.prediction.data) == self.y_train.data)
 
 
 if __name__ == '__main__':

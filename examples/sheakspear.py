@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 from pytensor.tensor import Tensor
 from pytensor.layers import Embedding, LSTMCell, CrossEntropyLoss
 from pytensor.optimizers import SGD
@@ -10,8 +11,8 @@ class NN:
 
     def __init__(self):
         self.data, self.vocab, self.word2index = get_data()
-        self.indices = Tensor.np.array(self.data)
-        self.vocab = Tensor.np.array(self.vocab)
+        self.indices = np.array(self.data)
+        self.vocab = np.array(self.vocab)
         self.embed = Embedding(v_size=len(self.vocab), dim=512)
         self.model = LSTMCell(in_size=512, h_size=512, out_size=len(self.vocab))
         self.model.w_ho.weights.data *= 0
@@ -21,7 +22,7 @@ class NN:
     def generate_sample(self, n=30, init_char=' '):
         s = ''
         hidden = self.model.init_hidden(batch_size=1)
-        e_input = Tensor(Tensor.np.array(self.word2index[init_char]))
+        e_input = Tensor(np.array(self.word2index[init_char]))
         for i in range(n):
             rnn_input = self.embed.forward(e_input)
             output, hidden = self.model.forward(rnn_input, hidden)
@@ -29,9 +30,9 @@ class NN:
             temp_dist = output.softmax()
             temp_dist /= temp_dist.sum(0)
 
-            m = (temp_dist.data > Tensor.np.random.rand()).argmax()
+            m = (temp_dist.data > np.random.rand()).argmax()
             c = self.vocab[m]
-            e_input = Tensor(Tensor.np.array([m]))
+            e_input = Tensor(np.array([m]))
             s += c
 
         return s

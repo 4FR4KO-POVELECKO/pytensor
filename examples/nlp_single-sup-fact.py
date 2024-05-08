@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 from pytensor.tensor import Tensor
 from pytensor.layers import Embedding, RNNCell, CrossEntropyLoss
 from pytensor.optimizers import SGD
@@ -8,8 +9,8 @@ from datasets import single_sup_fact
 class NN:
     def __init__(self):
         self.train_data, self.test_data, self.vocab = single_sup_fact.get_data()
-        self.train_data = Tensor.np.array(self.train_data)
-        self.test_data = Tensor.np.array(self.test_data)
+        self.train_data = np.array(self.train_data)
+        self.test_data = np.array(self.test_data)
         vocab_size = len(self.vocab)
 
         self.embed = Embedding(vocab_size, 16)
@@ -49,7 +50,7 @@ class NN:
                 print(
                     f'Epoch: {i}.'
                     f'Loss: {total_loss / (len(self.train_data)/batch_size)}.'
-                    f'Correct: {(target.data == Tensor.np.argmax(output.data, axis=1)).mean()}.'
+                    f'Correct: {(target.data == np.argmax(output.data, axis=1)).mean()}.'
                 )
 
     def test(self):
